@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  BucketName:
+    Type: String
+    Description: Nombre del Bucket de S3
+    Default: MyS3Bucket
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+
+  MyRedshiftCluster:
+    Type: AWS::Redshift::Cluster
+    Properties:
+      ClusterType: multi-node
+      NumberOfNodes: 2
+      NodeType: dc2.large
+      MasterUsername: admin
+      MasterUserPassword: adminPassword
+      ClusterIdentifier: MyRedshiftCluster
+      PubliclyAccessible: true
+
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: MyVPC
+
+  MyRoleForS3:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MyRoleForS3
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3FullAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:*
+                Resource: '*'
+
+  MyRoleForRedshift:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MyRoleForRedshift
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: redshift.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: RedshiftFullAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: redshift:*
+                Resource: '*'
+
+Outputs:
+  S3BucketName:
+    Value: !Ref MyS3Bucket
+  RedshiftClusterIdentifier:
+    Value: !Ref MyRedshiftCluster
+  VPCId:
+    Value: !Ref MyVPC
+  S3RoleArn:
+    Value: !GetAtt MyRoleForS3.Arn
+  RedshiftRoleArn:
+    Value: !GetAtt MyRoleForRedshift.Arn
