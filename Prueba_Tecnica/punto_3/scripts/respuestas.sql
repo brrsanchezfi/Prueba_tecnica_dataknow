@@ -1,0 +1,150 @@
+USE EMPRESA;
+GO
+
+
+-- ➢ Seleccione nombre, apellido y salario de todos los empleados.
+
+CREATE VIEW PREGUNTA_1 AS 
+SELECT NOMBRE, APELLIDO, SALARIO
+FROM EMPLEADO;
+GO
+
+SELECT * FROM PREGUNTA_1;
+GO
+
+
+-- ➢ Seleccione nombre, apellido y salario de todos los empleados que ganen más 
+-- de 4 millones.
+
+CREATE VIEW PREGUNTA_2 AS
+SELECT * 
+FROM PREGUNTA_1
+WHERE SALARIO > 4000000;
+GO
+
+SELECT * FROM PREGUNTA_2;
+GO
+
+
+-- ➢ Cuente los empleados por sexo.
+
+CREATE VIEW PREGUNTA_3 AS 
+SELECT SEXO, COUNT(*) AS TOTAL
+FROM EMPLEADO
+GROUP BY SEXO;
+GO
+
+SELECT * FROM PREGUNTA_3;
+GO
+
+
+-- ➢ Seleccione los empleados que no han hecho solicitud de vacaciones.
+
+CREATE VIEW PREGUNTA_4 AS 
+
+    WITH SOLICITUD_VACACIONES AS (
+        SELECT ID_EMP, COUNT(ID_EMP) AS CantidadSolicitudes
+        FROM VACACIONES
+        GROUP BY ID_EMP)
+
+SELECT E.NOMBRE, E.APELLIDO, E.ID AS ID_EMP
+FROM EMPLEADO AS E
+LEFT JOIN SOLICITUD_VACACIONES AS SV
+    ON E.ID = SV.ID_EMP
+WHERE SV.ID_EMP IS NULL OR SV.CantidadSolicitudes = 0;
+GO
+
+SELECT * FROM PREGUNTA_4;
+GO
+
+
+-- ➢ Seleccione los empleados que tengan más de una solicitud de vacaciones y 
+-- muestre cuantas solicitudes tienen los que cumplen.
+
+
+CREATE VIEW PREGUNTA_5 AS 
+
+    WITH SOLICITUD_VACACIONES AS (
+        SELECT ID_EMP, COUNT(ID_EMP) AS CantidadSolicitudes
+        FROM VACACIONES
+        GROUP BY ID_EMP)
+
+SELECT E.NOMBRE, E.APELLIDO, E.ID AS ID_EMP, SV.CantidadSolicitudes
+FROM EMPLEADO AS E
+LEFT JOIN SOLICITUD_VACACIONES AS SV
+    ON E.ID = SV.ID_EMP
+WHERE SV.CantidadSolicitudes > 1;
+GO
+
+SELECT * FROM PREGUNTA_5;
+GO
+
+
+-- ➢ Determine el salario promedio de los empleados.
+
+CREATE VIEW PREGUNTA_6 AS
+SELECT AVG(SALARIO) AS SALARIO_PROMEDIO
+FROM EMPLEADO;
+GO
+
+SELECT * FROM PREGUNTA_6;
+GO
+
+
+    DECLARE @MENSAJE VARCHAR(100)
+    DECLARE @SALARIOPROMEDIO DECIMAL(10,2)
+    SELECT @SALARIOPROMEDIO =AVG(SALARIO) FROM EMPLEADO
+    SET @MENSAJE = 'EL VALOR PROMEDIO DE SALARIOS ES: ' + CAST(@SALARIOPROMEDIO AS VARCHAR)
+    PRINT @MENSAJE
+    GO
+
+
+-- ➢ Determine la cantidad de días promedio solicitados de vacaciones por cada 
+-- empleado.
+
+CREATE VIEW PREGUNTA_7 AS 
+SELECT E.ID, E.NOMBRE, E.APELLIDO, AVG(CANTIDAD_DIAS) AS DIAS 
+FROM EMPLEADO AS E
+LEFT JOIN VACACIONES AS SV
+    ON E.ID = SV.ID_EMP
+GROUP BY E.ID, E.NOMBRE, E.APELLIDO;
+GO
+
+SELECT * FROM PREGUNTA_7;
+GO
+
+
+-- ➢ Seleccione el empleado que mayor cantidad de días de vacaciones ha 
+-- solicitado, muestre el nombre, apellido y cantidad de días totales solicitados.
+
+CREATE VIEW PREGUNTA_8 AS 
+SELECT TOP 1 E.NOMBRE, E.APELLIDO, SUM(SV.CANTIDAD_DIAS) AS DIAS
+FROM EMPLEADO AS E
+LEFT JOIN VACACIONES AS SV
+    ON E.ID = SV.ID_EMP
+GROUP BY E.ID, E.NOMBRE, E.APELLIDO
+ORDER BY DIAS DESC;
+GO
+
+SELECT * FROM PREGUNTA_8;
+GO
+
+
+-- ➢ Consulte la cantidad de días aprobados y rechazados por cada empleado, 
+-- en caso de no tener solicitudes mostrar 0.
+
+
+CREATE VIEW PREGUNTA_9 AS 
+SELECT 
+    E.NOMBRE, 
+    E.APELLIDO,
+    COALESCE(SUM(CASE WHEN SV.ESTADO LIKE 'A' THEN SV.CANTIDAD_DIAS ELSE 0 END),0) AS APROBADOS,
+    COALESCE(SUM(CASE WHEN SV.ESTADO LIKE 'R' THEN SV.CANTIDAD_DIAS ELSE 0 END),0) AS RECHAZADOS
+FROM EMPLEADO AS E
+LEFT JOIN VACACIONES AS SV
+    ON E.ID = SV.ID_EMP
+GROUP BY E.ID, E.NOMBRE, E.APELLIDO;
+GO
+
+SELECT * FROM PREGUNTA_9;
+GO

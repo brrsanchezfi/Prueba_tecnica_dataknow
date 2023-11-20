@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  sql-server:
+    container_name: sql-test
+    hostname: sql-test
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "XyZ#2fL9!qo$7aB"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./data:/var/opt/mssql/data
+      - ./scripts:/scripts
+    entrypoint: [ "bash", "-c", "/scripts/entrypoint.sh" ]
+    command: ["tail", "-f", "/dev/null"]
